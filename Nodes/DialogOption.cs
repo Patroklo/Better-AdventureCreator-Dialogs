@@ -27,7 +27,7 @@ namespace Dialogs
 
         public override void InstallNode(GameObject workingNode)
         {
-            AC.Conversation conversation = workingNode.GetComponent<DialogConversation>();
+             AC.Conversation conversation = workingNode.GetComponent<AC.Conversation>();
 
             if (conversation.options == null)
             {
@@ -40,6 +40,9 @@ namespace Dialogs
             newButtonDialog.label = DialogText;
             newButtonDialog.isOn = true;
 
+            // By default all conversation options will stop
+            newButtonDialog.conversationAction = AC.ConversationAction.Stop;
+            
             conversation.options.Add(newButtonDialog);
         }
 

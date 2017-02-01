@@ -17,6 +17,7 @@ namespace Dialogs
         SerializedProperty LoadedDialogue;
         SerializedProperty SelectedDialogIndex;
 
+        SerializedProperty SelectedFile;
 
         void OnEnable()
         {
@@ -44,6 +45,8 @@ namespace Dialogs
 
             LoadedDialogue = serializedObject.FindProperty("LoadedDialogue");
             SelectedDialogIndex = serializedObject.FindProperty("SelectedDialogIndex");
+            SelectedFile = serializedObject.FindProperty("SelectedFile");
+
         }
 
 
@@ -54,6 +57,10 @@ namespace Dialogs
 
             GUILayout.Label("Dialogs Menu:");
 
+            bool guiState = GUI.enabled;
+
+            GUI.enabled = (LoadedDialogue.boolValue == true) ? false : true;
+
             SelectedDialogIndex.intValue = EditorGUILayout.Popup("Select dialog: ", Handler.SelectedDialogIndex, Handler.FileList.ToArray());
 
             if (Handler.FileList.Count == 0)
@@ -63,10 +70,12 @@ namespace Dialogs
 
             if (Handler.FileList.Count != 0)
             {
-                Handler.SelectedFile = Handler.FileList[Handler.SelectedDialogIndex];
+                SelectedFile.stringValue = Handler.FileList[Handler.SelectedDialogIndex];
             }
 
-            if (GUILayout.Button("Apply dialog into scenario"))
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Apply dialog"))
             {
                 db.Load(Handler.SelectedFile);
 
@@ -79,12 +88,37 @@ namespace Dialogs
                 LoadedDialogue.boolValue = true;
             }
 
+            GUI.enabled = !GUI.enabled;
+
+            if (GUILayout.Button("Remove dialog"))
+            {
+                db.Load(Handler.SelectedFile);
+
+                // Delete old dialogue data if it exists.
+                DeleteDialogueData();
+
+                LoadedDialogue.boolValue = false;
+                SelectedDialogIndex.intValue = 0;
+                SelectedFile.stringValue = "";
+            }
+            
+            GUILayout.EndHorizontal();
+            GUI.enabled = guiState;
+
             serializedObject.ApplyModifiedProperties();
         }
 
+
+        protected virtual Transform FindParentTransform()
+        {
+            return ((DialogHandler)target).gameObject.transform.FindChild("_dialogData");
+        }
+
+
+
         protected virtual void DeleteDialogueData()
         {
-            Transform destroyTransform = ((DialogHandler)target).gameObject.transform.FindChild("_dialogData");
+            Transform destroyTransform = FindParentTransform();
 
             if (destroyTransform != null)
             {
@@ -112,20 +146,36 @@ namespace Dialogs
 
             AbstractNode firstNode = db.GetNodeByUniqueID(firstNodeUniqueID);
 
+            // Creates the game objects with their respective scripts for dialogues
             ProcessNode(firstNode);
+
+            // Connects all the newly created objects
+            ConnectNodeObjects();
         }
 
         protected virtual void ProcessNode(AbstractNode node)
         {
-            Transform parentTransform = ((DialogHandler)target).gameObject.transform.FindChild("_dialogData");
+            Transform parentTransform = FindParentTransform();
 
             GameObject newObject = MakeGameObject(node.UniqueID, parentTransform);
 
             node.InstallNode(newObject);
 
-            foreach (string childUniqueID in node.ChildNodes())
+            foreach (string childUniqueID in node.GetChildNodes())
             {
                 ProcessNode(db.GetNodeByUniqueID(childUniqueID));
+            }
+        }
+
+        protected virtual void ConnectNodeObjects()
+        {
+            List<AbstractNode> seedList = db.GetNodesByType(typeof(DialogSeed));
+
+            Transform parentTransform = FindParentTransform();
+
+            foreach (AbstractNode seed in seedList)
+            {
+                seed.MakeConnections(parentTransform.FindChild(seed.UniqueID).gameObject);
             }
         }
 

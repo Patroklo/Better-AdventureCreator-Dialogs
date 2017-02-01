@@ -26,14 +26,19 @@ namespace Dialogs
 
         public bool IsFirstNode = false;
 
-        protected List<string> childNodes = new List<string>();
+        protected List<string> ChildNodes = new List<string>();
+
+        // Orders when installing the nodes the UniqueIDs of the option nodes
+        protected List<string> OrderedOptionUniqueIDs = new List<String>();
 
         public override void InstallNode(GameObject workingNode)
         {
-            workingNode.AddComponent<AC.RememberConversation>();
-            workingNode.AddComponent<DialogConversation>();
+            OrderedOptionUniqueIDs = new List<string>();
 
-            childNodes = new List<string>();
+            workingNode.AddComponent<AC.RememberConversation>();
+            workingNode.AddComponent<AC.Conversation>();
+
+            ChildNodes = new List<string>();
 
             // Get all the node options linked to this seed
             foreach (int connectionKey in ActiveConnections.Keys)
@@ -44,19 +49,92 @@ namespace Dialogs
                 {
                     childNode.InstallNode(workingNode);
 
-                    List<string> childs = childNode.ChildNodes();
+                    // Adds the node unique id to be able to work with them in the next step.
+                    OrderedOptionUniqueIDs.Add(childNode.UniqueID);
+
+                    List<string> childs = childNode.GetChildNodes();
 
                     foreach (string childUniqueID in childs)
                     {
-                        childNodes.Add(childUniqueID);
+                        ChildNodes.Add(childUniqueID);
                     }
                 }
             }
         }
 
-        public override List<string> ChildNodes()
+        public override void MakeConnections(GameObject workingNode)
         {
-            return childNodes;
+
+            AC.Conversation conversation = workingNode.GetComponent<AC.Conversation>();
+
+            Transform parentTransform = workingNode.transform.parent;
+
+            Dictionary<int, string> nodeActiveConnections = GetActiveConnections();
+
+            foreach (int connectionKey in nodeActiveConnections.Keys)
+            {
+                // We get each child node. Only can be right now a DialogOption type.
+                AbstractNode dialogOptionNode = db.GetNodeByUniqueID(nodeActiveConnections[connectionKey]);
+                List<AbstractNode> dialogChilds = ConnectNodeChilds(dialogOptionNode);
+
+                int dialogIndex = OrderedOptionUniqueIDs.FindIndex(a => a == dialogOptionNode.UniqueID);
+
+                AC.ButtonDialog dialogButton = conversation.options[dialogIndex];
+
+                foreach (AbstractNode childNode in dialogChilds)
+                {
+                    GameObject childObject = parentTransform.FindChild(childNode.UniqueID).gameObject;
+
+
+                    if (childNode.GetType() == typeof(Speech))
+                    {
+                        AC.DialogueOption dialogueOption = childObject.GetComponent<AC.DialogueOption>();
+
+                        dialogButton.dialogueOption = dialogueOption;
+                    }
+                    if (childNode.GetType() == typeof(DialogSeed))
+                    {
+                        if (childNode.UniqueID == UniqueID)
+                        {
+                            dialogButton.conversationAction = AC.ConversationAction.ReturnToConversation;
+                        }
+                        else
+                        {
+                            AC.Conversation nextConversation = workingNode.GetComponent<AC.Conversation>();
+                            dialogButton.conversationAction = AC.ConversationAction.RunOtherConversation;
+                            dialogButton.newConversation = nextConversation;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private List<AbstractNode> ConnectNodeChilds(AbstractNode node)
+        {
+            List<AbstractNode> returnList = new List<AbstractNode>();
+
+            List<string> childList = node.GetChildNodes();
+
+            foreach (string childUniqueID in childList)
+            {
+                AbstractNode childNode = db.GetNodeByUniqueID(childUniqueID);
+
+                returnList.Add(childNode);
+
+                if (childNode.GetType() == typeof(Speech))
+                {
+                    returnList.AddRange(ConnectNodeChilds(childNode));
+                }
+            }
+
+            return returnList;
+        }
+
+
+        public override List<string> GetChildNodes()
+        {
+            return ChildNodes;
         }
 
 

@@ -66,7 +66,10 @@ namespace Dialogs
         public virtual void InstallNode(GameObject workingNode)
         { }
 
-        public virtual List<string> ChildNodes()
+        public virtual void MakeConnections(GameObject workingNode)
+        {}
+
+        public virtual List<string> GetChildNodes()
         {
             List<string> returnList = new List<string>();
 

@@ -86,7 +86,7 @@ namespace Dialogs
         protected List<System.Type> NodeTypeList = new List<System.Type>();
         protected Dictionary<int, string> PublicNodeTitleList = new Dictionary<int, string>();
 
-        [HideInInspector] 
+        [HideInInspector]
         public List<AbstractNode> NodeList { get; set; }
 
         [HideInInspector]
@@ -184,7 +184,7 @@ namespace Dialogs
 
             PropertiesNode propertiesNode = (PropertiesNode)GetNodeByType(typeof(PropertiesNode));
             propertiesNode.SelectedDialogIndex = FileManager.LoadFiles().FindIndex(a => a == FileName);
-          
+
             propertiesNode.HasLoadedDialog = true;
         }
 
@@ -332,6 +332,24 @@ namespace Dialogs
             return null;
         }
 
+        /// <summary>
+        /// Returns the a list of nodes selected by type
+        /// </summary>
+        /// <param name="nodeType"></param>
+        /// <returns></returns>
+        public virtual List<AbstractNode> GetNodesByType(System.Type nodeType)
+        {
+            List<AbstractNode> returnList = new List<AbstractNode>();
+
+            foreach (AbstractNode node in NodeList)
+            {
+                if (node.GetType() == nodeType)
+                {
+                    returnList.Add(node);
+                }
+            }
+            return returnList;
+        }
 
         /// <summary>
         /// Returns the type of the loaded node or throws an exception in case it doesn't exist.
