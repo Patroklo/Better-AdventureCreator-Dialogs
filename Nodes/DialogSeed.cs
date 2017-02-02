@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using System.Threading;
 using UnityEditor;
-using AC;
 
 namespace Dialogs
 {
@@ -100,7 +98,7 @@ namespace Dialogs
                         }
                         else
                         {
-                            AC.Conversation nextConversation = workingNode.GetComponent<AC.Conversation>();
+                            AC.Conversation nextConversation = childObject.GetComponent<AC.Conversation>();
                             dialogButton.conversationAction = AC.ConversationAction.RunOtherConversation;
                             dialogButton.newConversation = nextConversation;
                         }

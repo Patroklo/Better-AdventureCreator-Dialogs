@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using System.Collections;
 using System.Threading;
 using System.Runtime.Serialization;
 

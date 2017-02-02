@@ -1,8 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using System.Linq;
-using System.Reflection;
-using UnityEditor;
 using System.Collections.Generic;
 
 namespace Dialogs

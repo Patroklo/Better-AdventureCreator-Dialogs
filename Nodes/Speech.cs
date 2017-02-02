@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using AC;
 using UnityEditor;
 using System.Runtime.Serialization;
 using System.Collections.Generic;
@@ -12,12 +11,11 @@ namespace Dialogs
     public class SerializableCharacter
     {
         [NonSerialized]
-        protected AC.Char character = null;
+        protected GameObject character = null;
 
         [SerializeField]
         protected int? GameObjectID = null;
-
-        public AC.Char Character
+        public GameObject Character
         {
             get
             {
@@ -57,7 +55,7 @@ namespace Dialogs
                 }
                 else
                 {
-                    this.Character = characterObject.GetComponent<NPC>();
+                    this.Character = characterObject;
                 }
             }
         }
@@ -71,8 +69,8 @@ namespace Dialogs
         [SerializeField]
         public bool PlayerLine;
 
-        // [NonSerialized]
-        // public AC.Char Speaker;
+        [NonSerialized]
+        public AC.Char SpeakerChar;
 
         [SerializeField]
         public SerializableCharacter Speaker = new SerializableCharacter();
@@ -108,9 +106,9 @@ namespace Dialogs
         public override void InstallNode(GameObject workingNode)
         {
             List<AbstractNode> childNodeList = RecursiveCheckChildren(this, workingNode);
-            
+
             ChildNodes = new List<string>();
-            
+
             foreach (AbstractNode child in childNodeList)
             {
                 ChildNodes.Add(child.UniqueID);
@@ -121,13 +119,13 @@ namespace Dialogs
         {
             List<AbstractNode> returnList = new List<AbstractNode>();
 
-            AC.DialogueOption dialogueOption = CheckDialogueOption(workingNode);
+            AC.DialogueOption dialogueOption = GetDialogueOption(workingNode);
 
             AddSpeechToDialog(node, dialogueOption);
 
             foreach (int childKey in node.GetActiveConnections().Keys)
             {
-                AbstractNode childNode = db.GetNodeByUniqueID(ActiveConnections[childKey]);
+                AbstractNode childNode = db.GetNodeByUniqueID(node.GetActiveConnections()[childKey]);
 
                 if (childNode.GetType() == typeof(Speech))
                 {
@@ -142,8 +140,7 @@ namespace Dialogs
         }
 
 
-
-        protected AC.DialogueOption CheckDialogueOption(GameObject workingNode)
+        protected AC.DialogueOption GetDialogueOption(GameObject workingNode)
         {
             AC.DialogueOption dialogueOption = workingNode.GetComponent<AC.DialogueOption>();
 
@@ -168,7 +165,10 @@ namespace Dialogs
             AC.ActionSpeech newSpeech = ScriptableObject.CreateInstance<AC.ActionSpeech>();
 
             newSpeech.isPlayer = node.PlayerLine;
-            newSpeech.speaker = node.Speaker.Character;
+            if (node.Speaker.Character != null)
+            {
+                newSpeech.speaker = node.Speaker.Character.GetComponent<AC.Char>();
+            }
             newSpeech.messageText = node.SpeechText;
             newSpeech.noAnimation = node.NotAnimateSpeaker;
             newSpeech.isBackground = node.PlayBackground;
@@ -207,7 +207,12 @@ namespace Dialogs
                 }
                 else
                 {
-                    Speaker.Character = (AC.Char)EditorGUILayout.ObjectField("Speaker:", Speaker.Character, typeof(AC.Char), true);
+                    SpeakerChar = (AC.Char)EditorGUILayout.ObjectField("Speaker:", SpeakerChar, typeof(AC.Char), true);
+
+                    if (SpeakerChar != null)
+                    {
+                        Speaker.Character = SpeakerChar.gameObject;
+                    }
                 }
             }
 
