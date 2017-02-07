@@ -256,7 +256,9 @@ namespace Dialogs
                     fileContents = fileContents.Replace(" ", "");
 
                     if (fileContents.Contains("class" + className + ":AbstractNode") ||
-                        fileContents.Contains("class" + className + ":Dialogs.AbstractNode"))
+                        fileContents.Contains("class" + className + ":Dialogs.AbstractNode")||
+                        fileContents.Contains("class" + className + ":AbstractChecker") ||
+                        fileContents.Contains("class" + className + ":Dialogs.AbstractChecker"))
                     {
 
                         var tempNode = Activator.CreateInstance(Type.GetType(nodeNamespace + "." + className));

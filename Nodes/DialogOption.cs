@@ -24,7 +24,7 @@ namespace Dialogs
 
         public override void InstallNode(GameObject workingNode)
         {
-             AC.Conversation conversation = workingNode.GetComponent<AC.Conversation>();
+            AC.Conversation conversation = workingNode.GetComponent<AC.Conversation>();
 
             if (conversation.options == null)
             {
@@ -39,8 +39,16 @@ namespace Dialogs
 
             // By default all conversation options will stop
             newButtonDialog.conversationAction = AC.ConversationAction.Stop;
-            
+
             conversation.options.Add(newButtonDialog);
+
+            // We get the parent node (conversation seed node) and then add to the
+            // ordered option unique ids this uniqueID.
+            String parentNodeUniqueID = workingNode.name;
+            DialogSeed parentSeed = (DialogSeed)db.GetNodeByUniqueID(parentNodeUniqueID);
+            
+            // Adds the node unique id to be able to work with them in the next step.
+            parentSeed.OrderedOptionUniqueIDs.Add(UniqueID);
         }
 
 

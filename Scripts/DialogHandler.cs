@@ -70,6 +70,11 @@ namespace Dialogs
             return db.GetNodeByUniqueID(firstNodeUniqueID);
         }
 
+        public List<AbstractNode> GetNodesByType(System.Type NodeType)
+        {
+            return db.GetNodesByType(NodeType);
+        }
+
 
         protected virtual Transform FindParentTransform()
         {

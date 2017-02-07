@@ -27,7 +27,9 @@ namespace Dialogs
         protected List<string> ChildNodes = new List<string>();
 
         // Orders when installing the nodes the UniqueIDs of the option nodes
-        protected List<string> OrderedOptionUniqueIDs = new List<String>();
+        public List<string> OrderedOptionUniqueIDs = new List<String>();
+
+        public List<AbstractChecker> CheckerList = new List<AbstractChecker>();
 
         public override void InstallNode(GameObject workingNode)
         {
@@ -47,9 +49,6 @@ namespace Dialogs
                 {
                     childNode.InstallNode(workingNode);
 
-                    // Adds the node unique id to be able to work with them in the next step.
-                    OrderedOptionUniqueIDs.Add(childNode.UniqueID);
-
                     List<string> childs = childNode.GetChildNodes();
 
                     foreach (string childUniqueID in childs)
@@ -57,22 +56,27 @@ namespace Dialogs
                         ChildNodes.Add(childUniqueID);
                     }
                 }
+                // If it's a varcheck, then we will get all its childs, 
+                // add them as buttons into the dialog and then get the
+                // childs of those DialogOptions and add them into the
+                // ChildNodes list
+                else if (childNode.GetType() == typeof(VarCheck))
+                {
+                    childNode.InstallNode(workingNode);
+                }
             }
         }
 
         public override void MakeConnections(GameObject workingNode)
         {
-
             AC.Conversation conversation = workingNode.GetComponent<AC.Conversation>();
 
             Transform parentTransform = workingNode.transform.parent;
 
-            Dictionary<int, string> nodeActiveConnections = GetActiveConnections();
-
-            foreach (int connectionKey in nodeActiveConnections.Keys)
+            foreach (string childUniqueID in ChildNodes)
             {
                 // We get each child node. Only can be right now a DialogOption type.
-                AbstractNode dialogOptionNode = db.GetNodeByUniqueID(nodeActiveConnections[connectionKey]);
+                AbstractNode dialogOptionNode = db.GetNodeByUniqueID(childUniqueID);
                 List<AbstractNode> dialogChilds = ConnectNodeChilds(dialogOptionNode);
 
                 int dialogIndex = OrderedOptionUniqueIDs.FindIndex(a => a == dialogOptionNode.UniqueID);
@@ -82,7 +86,6 @@ namespace Dialogs
                 foreach (AbstractNode childNode in dialogChilds)
                 {
                     GameObject childObject = parentTransform.FindChild(childNode.UniqueID).gameObject;
-
 
                     if (childNode.GetType() == typeof(Speech))
                     {
@@ -135,6 +138,14 @@ namespace Dialogs
             return ChildNodes;
         }
 
+        // Will execute all the checkers that are linked to this node
+        public void ExecuteCheckers()
+        {
+            foreach (IChecker checker in CheckerList)
+            {
+                checker.Check();
+            }
+        }
 
 #if UNITY_EDITOR
 
@@ -218,14 +229,14 @@ namespace Dialogs
 
         public override bool CanConnectNode(AbstractNode NodeTarget)
         {
-            if (NodeTarget.GetType() == typeof(DialogOption))
+            if (NodeTarget.GetType() == typeof(DialogOption)
+            || NodeTarget.GetType() == typeof(VarCheck))
             {
                 return true;
             }
 
             return false;
         }
-
 
         public override void CreateAutomaticNode()
         {

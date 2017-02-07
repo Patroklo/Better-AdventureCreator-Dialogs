@@ -8,8 +8,9 @@ using UnityEditor;
 namespace Dialogs
 {
 
+
     [System.Serializable]
-    public class SimplerConversations : AC.ActionConversation
+    public class ActionConversation : AC.ActionConversation
     {
 
         public DialogHandler dialogHandler;
@@ -17,83 +18,26 @@ namespace Dialogs
         public bool dialogLoaded = false;
 
 
-        /*	public int parameterID = -1;
-            public int constantID = 0;
-            public Conversation conversation;
+		public ActionConversation ()
+		{
+			this.isDisplayed = true;
+			category = AC.ActionCategory.Dialogue;
+			title = "Start manually made conversation";
+			description = "Enters Conversation mode, and displays the available dialogue options in a specified conversation.";
+			numSockets = 0;
+		}
 
-            public bool overrideOptions = false;
+        override public float Run()
+        {
+            List<AbstractNode> dialogSeeds = dialogHandler.GetNodesByType(typeof(DialogSeed));
 
-
-            public ActionConversation ()
+            foreach (AbstractNode dialogSeed in dialogSeeds)
             {
-                this.isDisplayed = true;
-                category = ActionCategory.Dialogue;
-                title = "Start conversation";
-                description = "Enters Conversation mode, and displays the available dialogue options in a specified conversation.";
-                numSockets = 0;
+                ((DialogSeed)dialogSeed).ExecuteCheckers();
             }
+            return base.Run();
+        }
 
-
-            override public void AssignValues (List<ActionParameter> parameters)
-            {
-                conversation = AssignFile <Conversation> (parameters, parameterID, constantID, conversation);
-            }
-
-
-            override public float Run ()
-            {
-                if (overrideOptions)
-                {
-                    if (conversation != null && conversation.lastOption >= 0)
-                    {
-                        KickStarter.actionListManager.ignoreNextConversationSkip = true;
-                        return 0f;
-                    }
-                    KickStarter.actionListManager.ignoreNextConversationSkip = false;
-                }
-
-                if (conversation)
-                {
-                    if (overrideOptions)
-                    {
-                        conversation.Interact (this);
-                    }
-                    else
-                    {
-                        conversation.Interact ();
-                    }
-                }
-
-                return 0f;
-            }
-
-
-            override public void Skip ()
-            {
-                if (KickStarter.actionListManager.ignoreNextConversationSkip)
-                {
-                    KickStarter.actionListManager.ignoreNextConversationSkip = false;
-                    return;
-                }
-                Run ();
-            }
-
-
-            override public ActionEnd End (List<AC.Action> actions)
-            {
-                if (conversation)
-                {
-                    int _chosenOptionIndex = conversation.lastOption;
-                    conversation.lastOption = -1;
-
-                    if (overrideOptions && _chosenOptionIndex >= 0 && endings.Count > _chosenOptionIndex)
-                    {
-                        return endings[_chosenOptionIndex];
-                    }
-                }
-                return GenerateStopActionEnd ();
-            }
-            */
 
 #if UNITY_EDITOR
 
@@ -159,41 +103,6 @@ namespace Dialogs
                 }
             }
         }
-
-
-        /*	protected override string GetSocketLabel (int i)
-            {
-                i -= 1;
-                if (conversation != null && conversation.options.Count > i)
-                {
-                    return ("'" + conversation.options[i].label + "':");
-                }
-                return "Option " + i.ToString () + ":";
-            }
-
-
-            override public void AssignConstantIDs (bool saveScriptsToo)
-            {
-                if (saveScriptsToo)
-                {
-                    AddSaveScript <RememberConversation> (conversation);
-                }
-                AssignConstantID <Conversation> (conversation, constantID, parameterID);
-            }
-
-
-            override public string SetLabel ()
-            {
-                string labelAdd = "";
-
-                if (conversation)
-                {
-                    labelAdd = " (" + conversation + ")";
-                }
-
-                return labelAdd;
-            }
-    */
 #endif
 
     }
