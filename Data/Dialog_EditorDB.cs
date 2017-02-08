@@ -186,7 +186,32 @@ namespace Dialogs
             propertiesNode.SelectedDialogIndex = FileManager.LoadFiles().FindIndex(a => a == FileName);
 
             propertiesNode.HasLoadedDialog = true;
+            propertiesNode.LoadedFile = FileName;
         }
+
+        public void Delete(string FileName, bool unloadDialog = false)
+        {
+            string fileLocation = FileManager.LoadFile(FileName);
+
+            File.Delete(fileLocation);
+            FileManager.ResetFiles();
+
+            PropertiesNode propertyNode;
+
+            if (unloadDialog == true)
+            {
+                Init();
+                LoadNodeTypes();
+                propertyNode = (PropertiesNode)AddNode(GetLoadedNodeKey(typeof(PropertiesNode)));
+            }
+            else
+            {
+                propertyNode = (PropertiesNode)GetNodeByType(typeof(PropertiesNode));
+            }
+
+            propertyNode.SelectedDialogIndex = 0;
+        }
+
 
         public Dialog_EditorDB()
         {
@@ -256,7 +281,7 @@ namespace Dialogs
                     fileContents = fileContents.Replace(" ", "");
 
                     if (fileContents.Contains("class" + className + ":AbstractNode") ||
-                        fileContents.Contains("class" + className + ":Dialogs.AbstractNode")||
+                        fileContents.Contains("class" + className + ":Dialogs.AbstractNode") ||
                         fileContents.Contains("class" + className + ":AbstractChecker") ||
                         fileContents.Contains("class" + className + ":Dialogs.AbstractChecker"))
                     {

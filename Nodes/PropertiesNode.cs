@@ -34,6 +34,7 @@ namespace Dialogs
         public new int widthSize = 250;
         public new int heightSize = 200;
 
+        public string LoadedFile;
 
 
         int SelectedNodeType = 0;
@@ -88,10 +89,36 @@ namespace Dialogs
 
             GUI.enabled = true;
 
+            if (String.IsNullOrEmpty(selectedFile))
+            {
+                GUI.enabled = false;
+            }
+
             if (GUILayout.Button("Load"))
             {
                 db.Load(selectedFile);
             }
+
+            GUI.enabled = true;
+
+            if (selectedFile == "")
+            {
+                GUI.enabled = false;
+            }
+
+            if (GUILayout.Button("Delete"))
+            {
+                bool unloadDialog = false;
+
+                if (selectedFile == this.LoadedFile)
+                {
+                    unloadDialog = true;
+                }
+
+                db.Delete(selectedFile, unloadDialog);
+            }
+
+            GUI.enabled = true;
 
             GUILayout.EndHorizontal();
 
